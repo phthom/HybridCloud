@@ -1,2 +1,5 @@
-# HybridCloud
-IBM Hybrid Cloud Workshop (includes both IBM Cloud Public and Private labs)
+# IBM Hybrid Cloud Workshop
+
+![image-20190604112317181](images/image-20190604112317181-9640197.png)
+
+---
