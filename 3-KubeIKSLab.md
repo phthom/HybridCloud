@@ -84,7 +84,7 @@ To use that service, click the blue button (**create**) at the bottom:
 ![](./images/createcluster.png)
 
 
-## 3.	Define a free Cluster
+## 3. Define a free Cluster
 
 Select **Free** for the cluster type :
 
@@ -98,7 +98,7 @@ The default cluster type is **standard**. So you have to select the **free** clu
 ![image-20190118145903795](images/image-20190118145903795-7819943.png)
 
 
-## 4.	Create the cluster 
+## 4. Create the cluster 
 
 Click on the **Create Cluster** button:
 
@@ -374,7 +374,7 @@ If you get an error message like "error: You must be logged in to the server (Un
 Get and download this github repository into that directory :
 
 `git clone https://github.com/IBM/container-service-getting-started-wt.git`
-​	
+
 ![git](images/git.png)
 
 
