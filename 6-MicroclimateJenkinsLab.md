@@ -53,7 +53,7 @@ Microclimate should be already deployed and the light should be green. The lates
 
 Click on the blue link (i.e **microclimate**) to see more information about the application:
 
-![image-20190308142252004](images/image-20190308142252004-2051372.png)
+![image-20190701135115795](images/image-20190701135115795-1981875.png)
 
 Browse the page to the bottom to look at the **Deployment section** :
 
@@ -132,7 +132,7 @@ Navigate on the left pane to the **Edit** button:
 
 
 
-At this point, the editor can be used to edit the Node.JS application.
+At this point, the editor can be used to edit the Node.JS application (it can be slow the first time)
 
 ![image-20190308153615235](images/image-20190308153615235-2055775.png)
 
@@ -148,7 +148,7 @@ Go to the end of the index.html file and modify the **congratulation** line by a
 
 ![congratulation](./images/mcmodify.png)
 
-Save (**File>Save**) and then re-build the application (because Auto Build is on, building will start automatically after saving) .
+Save (**File>Save** or Ctrl-S) and this re-builds the application (because Auto Build is on, building will start automatically after saving) .
 
 Wait until the green light(Running) to see the modification your simple application:
 
@@ -222,8 +222,6 @@ Click on **Open Pipeline** to get access to Jenkins  (enter your credentials at 
 ![image-20190308160247361](images/image-20190308160247361-2057367.png)
 
 
-
-Wait until the progression ends:
 
 You can look at the bottom left side to see there are some slave executor available :
 
@@ -319,6 +317,14 @@ http://ipaddress:30251
 
 # Congratulations
 
-You have successfully created and installed a microservice application with Microclimate.
+You have successfully created and installed a microservice application with Microclimate and deployed this application with Jenkins on IBM Cloud Private
+
+
+
+### End of Lab
+
+
+
+
 
 # IBM Hybrid Cloud Workshop

@@ -59,7 +59,7 @@ A Kubernetes service groups a set of pods and provides network connection to the
 
 With IBM Cloud Kubernetes Service (IKS), you can define complex architectures that implement resiliency, high availability and replication between data centers and regions (also called AZ – availability zones).  
 
-In this lab, we are not going to implement such a complex environment. 
+
 
 
 
@@ -71,17 +71,22 @@ Before you can deploy an app by using Kubernetes, start by **creating a cluster*
 
 To create a lite cluster:
 
+
+
 ## 1.  Select the IBM Kubernetes Service	
 
 From the Catalog, in the Containers category, click on **Kubernetes Service**.
 
 ![image-20190406152818356](images/image-20190406152818356-4557298.png)
 
+
+
 ## 2. Create the service
 
 To use that service, click the blue button (**create**) at the bottom:
 
 ![](./images/createcluster.png)
+
 
 
 ## 3. Define a free Cluster
@@ -98,6 +103,7 @@ The default cluster type is **standard**. So you have to select the **free** clu
 ![image-20190118145903795](images/image-20190118145903795-7819943.png)
 
 
+
 ## 4. Create the cluster 
 
 Click on the **Create Cluster** button:
@@ -110,12 +116,13 @@ The details for the cluster open, but the worker node in the cluster takes a few
 
 Click on **Access** to find some more information:
 
-![image-20190406192605615](images/image-20190406192605615-4571565.png)
+![image-20190630183844395](images/image-20190630183844395-1912724.png)
 
 **IMPORTANT - Take a note of** :
 
-> - API login endpoint (https://api.ng.bluemix.net for example)
+> - API login endpoint (cloud.ibm.com for example)
 > - The region-set (us-south for example)
+> - or the command : `ibmcloud login -a cloud.ibm.com -r eu-gb`
 
 
 
@@ -153,14 +160,14 @@ If you get an error, go to the PrepareLab.MD file to understand how to install d
 
 
 
-### 2. Check that ibmcloud cs and ibmcloud cr have been installed
+### 2. Check 'ibmcloud cs' and 'ibmcloud cr'
 
 `ibmcloud plugin list`
 
 Results: 
 
 ```bash
-$ ibmcloud plugin list
+# ibmcloud plugin list
 Listing installed plug-ins...
 
 Plugin Name          Version   
@@ -171,6 +178,8 @@ container-service/kubernetes-service   0.1.581
 
 
 ### 3. Install kubectl command line on your laptop
+
+> **<u>Skip this task if you are using the provided VM</u>**
 
 This command (kubectl) will be used to control kubernetes. For more information on installation, go to this link:
 
@@ -223,18 +232,14 @@ kubectl version --short  --client=true
 Client Version: v1.12.7
 ```
 
-
-
-### 4. Check again kubectl 
-
-type the following command :
+Type the following command :
 
 `kubectl version --short`
 
 And you should get version for your client and server :
 
 ``` bash
-$ kubectl version --short
+# kubectl version --short
 Client Version: v1.12.7
 error: You must be logged in to the server (the server has asked for the client to provide credentials)
 ```
@@ -244,28 +249,43 @@ The error at the end is **normal** because we need to specify how to connect to 
 
 ### 5. Gain access to the cluster
 
+> IMPORTANT : At this point, your cluster should have been started. Check in the IBM Cloud Console
+
 Log into your IBM Cloud account if no already logged in.
 
-`ibmcloud login -a <API-login-end-point>`
+`ibmcloud login -a <API-login-end-point> -r <region> -g <groupe>`
 
-> where the <API login-end-point> has been recorded previously in task 1-4.
+> where the <API-login-end-point> and <region>  has been recorded previously in task 1-4.
 
-**IMPORTANT : At this point, your cluster should have been started. Check in the IBM Cloud Console.**
+For example:
 
-Then go to your Cluster Region :
+`ibmcloud login -a cloud.ibm.com -r eu-gb -g default `
 
-`ibmcloud cs region-set <region-set> `
+>
 
-> where the <region-set> has been recorded previously  in task 1-4..
+Check your cluster:
+
+`ibmcloud ks clusters`
+
+Results:
+
+```bash
+# ibmcloud ks clusters
+OK
+Name        ID                                 State     Created          Workers   Location   Version       Resource Group Name   
+mycluster   c9e75798053742e5aedf85214e6a7a00   normal   22 minutes ago   1         hou02      1.13.7_1526   -   
+```
+
+
 
 Set the context for the cluster in your CLI.
 
-`ibmcloud cs cluster-config mycluster`
+`ibmcloud ks cluster-config mycluster`
 
 Output:
 
 ``` bash
-> ibmcloud cs cluster-config mycluster
+# ibmcloud ks cluster-config mycluster
 OK
 
 The configuration for mycluster was downloaded successfully. Export environment variables to start using Kubernetes.
@@ -273,11 +293,9 @@ The configuration for mycluster was downloaded successfully. Export environment 
 export KUBECONFIG=/Users/phil/.bluemix/plugins/container-service/clusters/mycluster/kube-config-mil01-mycluster.yml
 ```
 
- > IMPORTANT : Set the KUBECONFIG environment variable. **Copy the output from the previous command and paste it in your terminal**. The command output should look similar to the following.
+**IMPORTANT** : Cut, paste and execute the KUBECONFIG line at the end of the previous command to setup which cluster you want to access. 
 
- `export KUBECONFIG=/Users/phil/.bluemix/plugins/container-service/clusters/mycluster/kube-config-mil01-mycluster.yml`
-
- Verify that you can connect to your cluster by listing your worker nodes.
+Verify that you can connect to your cluster by listing your worker nodes.
 
  `kubectl get nodes`
 
@@ -285,20 +303,22 @@ export KUBECONFIG=/Users/phil/.bluemix/plugins/container-service/clusters/myclus
 
 ```con
 $ kubectl get nodes
-NAME            STATUS    ROLES     AGE       VERSION
-10.144.186.74   Ready     <none>    11m       v1.11.1-2+af27ab4b096122
+NAME            STATUS   ROLES    AGE     VERSION
+10.76.141.223   Ready    <none>   6m22s   v1.13.7+IKS
 
 ```
 
-**YOU ARE NOW CONNECTED TO YOUR CLUSTER**.
+
+
+**YOU ARE NOW CONNECTED TO YOUR IKS CLUSTER**.
 
 
 
-# Task 3 : Creating a private registry
+# Task 3 : Creating a private registry in IKS
 
 Set up your own private image repository in IBM Cloud Container Registry to securely store and share Docker images with all cluster users. A private image repository in IBM Cloud is identified by a **namespace**. The namespace is used to create a unique URL to your image repository that developers can use to access private Docker images.
 
-We choose a unique name as our namespace to group all images in our account. Replace <your_namespace> with a namespace of your choice and not something that is related to the tutorial.
+We choose a unique name as our namespace to group all images in our account. **Replace <your_namespace> with a namespace of your choice** and not something that is related to the tutorial.
 
 ```
 ibmcloud cr namespace-add <my_namespace>
@@ -307,7 +327,7 @@ ibmcloud cr namespace-add <my_namespace>
 Results:
 
 ```bash
-$ ibmcloud cr namespace-add imgreg        
+# ibmcloud cr namespace-add imgreg        
 Adding namespace 'imgreg'...
 Successfully added namespace 'imgreg'
 OK
@@ -320,13 +340,13 @@ Now login to the IBM Cloud registry:
 Output:
 
 ```bash
-$ ibmcloud cr login
+# ibmcloud cr login
 Logging in to 'registry.eu-gb.bluemix.net'...
 Logged in to 'registry.eu-gb.bluemix.net'.
 OK
 ```
 
-Take a note of the Doker registry name (**registry.eu-gb.bluemix.net** for example). 
+Take a note of the Doker registry name (registry.eu-gb.bluemix.net for example). It could be also the new **us.icr.io** registry name. 
 
 It will be referred as <registry> in the next steps.
 
@@ -389,8 +409,8 @@ Build the image locally and tag it with the name that you want to use on the  ku
 
 Output is:
 
-```
-$ docker build -t registry.eu-gb.bluemix.net/imgreg/hello1 .
+```bash
+# docker build -t registry.eu-gb.bluemix.net/imgreg/hello1 .
 Sending build context to Docker daemon  15.36kB
 Step 1/6 : FROM node:9.4.0-alpine
  ---> b5f94997f35f
@@ -419,11 +439,13 @@ To see the image, use the following command:
 
 Example:
 
+ ```bash
+# docker images registry.eu-gb.bluemix.net/imgreg/hello1:latest
+REPOSITORY                        TAG                 IMAGE ID            CREATED             SIZE
+us.icr.io/imgt1/hello1/hello1   latest              51c706fdc0c1        2 months ago        74.1MB
  ```
-$ docker images registry.eu-gb.bluemix.net/imgreg/hello1:latest
-REPOSITORY                                 TAG                 IMAGE ID            CREATED             SIZE
-registry.eu-gb.bluemix.net/imgreg/hello1   latest              51c706fdc0c1        2 months ago        74.1MB
- ```
+
+
 
 ### 4. Push the image to the registry. 
 
@@ -433,8 +455,8 @@ Push your image into the private registry :
 
  Your output should look like this.
 
-```
-$ docker push registry.eu-gb.bluemix.net/imgreg/hello1
+```bash
+# docker push registry.eu-gb.bluemix.net/imgreg/hello1
 The push refers to repository [registry.eu-gb.bluemix.net/imgreg/hello1]
 57eebb8b0417: Pushed 
 05e20323e508: Layer already exists 
@@ -446,6 +468,7 @@ latest: digest: sha256:4d754d9b243818185bb18a5b25f41bf1a2eb3ea7ad3efcdafbe1b2046
 ```
 
 > **IMPORTANT** : be sure that all the layers have been pushed, wait for the digest line at the end.
+
 
 
 ### 5. Open the Kubernetes Console
@@ -464,7 +487,7 @@ Click on Kubernetes Clusters and then select **"mycluster"** to see the Kubernet
 ![image-20190406221845033](images/image-20190406221845033-4581925.png)
 
 
-On the right part of the screen, **click the blue button** : Kubernetes Dashboard
+On the right part of the screen, **click the top right button** : Kubernetes Dashboard
 
 ![deploy](images/kdash.png)
 
@@ -476,13 +499,17 @@ You can look around in the dashboard to see all the different resources (pods, n
 
 Use your image to create a kubernetes deployment with the following command.
 
-`kubectl run hello1-deployment --image=<registry>/<namespace>/hello1`
+```
+kubectl run hello1-deployment --image=<registry>/<namespace>/hello1
+```
 
 Output is :
 
-```
-$ kubectl run hello1-deployment --image=registry.eu-gb.bluemix.net/imgreg/hello1
-deployment "hello1-deployment" created
+```bash
+# kubectl run hello1-deployment --image=us.icr.io/imgt1/hello1
+kubectl run --generator=deployment/apps.v1 is DEPRECATED and will be removed in a future version. Use kubectl run --generator=run-pod/v1 or kubectl create instead.
+deployment.apps/hello1-deployment created
+
 ```
 You can also look at the dashboard to see the deployment:
 
@@ -503,8 +530,8 @@ kubectl expose deployment/hello1-deployment --type=NodePort --port=8080 --name=h
 
 Your output should be:
 
-```
-$ kubectl expose deployment/hello1-deployment --type=NodePort --port=8080 --name=hello1-service --target-port=8080
+```bash
+# kubectl expose deployment/hello1-deployment --type=NodePort --port=8080 --name=hello1-service --target-port=8080
 service "hello1-service" exposed
 ```
 
@@ -524,8 +551,8 @@ The service is accessed through the IP address of the proxy node with the NodePo
 
  Your output should look like this.
 
-```
-$ kubectl describe service hello1-service
+```bash
+# kubectl describe service hello1-service
 Name:                     hello1-service
 Namespace:                default
 Labels:                   run=hello1-deployment
@@ -565,7 +592,7 @@ You can obtain text-based information on all the resources running in your clust
 
 Results:
 
-```
+```bash
 # kubectl get pods
 NAME                                      READY     STATUS    RESTARTS   AGE
 hello-world-deployment-67b694c76f-hvg9k   1/1       Running   0          11m
@@ -577,7 +604,7 @@ If the POD is running then look at the log (change the pod name with the one sho
 
 Results:
 
-```
+```bash
 # kubectl logs hello-world-deployment-67b694c76f-hvg9k
 Sample app is listening on port 8080.
 
@@ -591,7 +618,7 @@ You can also go inside your container:
 
 Results:
 
-```
+```bash
 # kubectl exec -it hello-world-deployment-67b694c76f-hvg9k /bin/sh
 / # ps
 PID   USER     TIME   COMMAND
@@ -684,7 +711,7 @@ To see your changes being rolled out, you can run:
 The rollout might occur so quickly that the following messages might not display:
 
 ```bash
-$ kubectl rollout status deployment/hello1-deployment
+# kubectl rollout status deployment/hello1-deployment
 Waiting for rollout to finish: 1 of 10 updated replicas are available...
 Waiting for rollout to finish: 2 of 10 updated replicas are available...
 Waiting for rollout to finish: 3 of 10 updated replicas are available...
@@ -708,7 +735,7 @@ You should see output listing 10 replicas of your deployment:
 Results :
 
 ```bash
-$ kubectl get pods
+# kubectl get pods
 NAME                                 READY     STATUS    RESTARTS   AGE
 hello1-deployment-864cd87c7f-675sr   1/1       Running   0          5m
 hello1-deployment-864cd87c7f-6wxkp   1/1       Running   0          3m
@@ -757,7 +784,7 @@ Run kubectl rollout status deployment/hello-world or kubectl get replicasets to 
 `kubectl rollout status deployment/hello1-deployment`
 
 ```bash
-$ kubectl rollout status deployment/hello1-deployment
+# kubectl rollout status deployment/hello1-deployment
 Waiting for rollout to finish: 2 out of 10 new replicas have been updated...
 Waiting for rollout to finish: 3 out of 10 new replicas have been updated...
 Waiting for rollout to finish: 3 out of 10 new replicas have been updated...
@@ -799,20 +826,20 @@ Finally, use that command to see the result:
 Results:
 
 ```bash
-$ kubectl get replicasets
+# kubectl get replicasets
 NAME                           DESIRED   CURRENT   READY     AGE
 hello1-deployment-864cd87c7f   0         0         0         23m
 hello1-deployment-d7cb4bfcf    10        10        10        2m
 ```
 
-Create a new service:
+Create a new service with these commands:
 
 ```console
 kubectl expose deployment/hello1-deployment --type=NodePort --port=8080 --name=hello1-service --target-port=8080
 kubectl describe service hello1-service
 ```
 
-Collect the new NodePort and test your new code :
+Collect the new **NodePort** and test your new code (we just added **Great Job**) :
 
 ![New Application up and running](./images/NewApp.png)
 

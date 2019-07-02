@@ -11,7 +11,12 @@
 ## Prerequisites
 This set of instructions requires that docker is already installed and docker commands can be run from a bash shell or a command line. You can get more information at the [Docker website](https://www.docker.com/get-docker)
 
->***Note:*** This lab assumes that you are running this from a "clean" environment. Clean means that you have not used docker with the images in this lab. This is important for someone who hasn't seen docker so they can see the activity as images are downloaded.
+**Note:** This lab assumes that you have already installed Docker on your laptop or you are using a Linux VM provided by the instructor. So you have 2 possibilities:
+
+- Docker is already installed on your **laptop**
+- Docker is already installed on the **provided VM** by the instructor
+
+Follow one or the other possibility.
 
 
 
@@ -30,8 +35,8 @@ However, you can see both the client (CLI) and the server (engine).
 
 Output:
 
-```console
-docker version
+```bash
+# docker version
 Client: Docker Engine - Community
  Version:           18.09.1
  API version:       1.39
@@ -52,7 +57,7 @@ Server: Docker Engine - Community
   Experimental:     true
 ```
 
-
+The Docker version could be different. 
 
 If you receive an error then go back to the **PrepareLab.md** document to install Docker on your system. 
 
@@ -66,8 +71,8 @@ As with all new computer things, it is obligatory that we start with "hello-worl
 
 Output:
 
-```console 
-> docker run hello-world
+```bash
+# docker run hello-world
 Unable to find image 'hello-world:latest' locally
 latest: Pulling from library/hello-world
 1b930d010525: Pull complete 
@@ -110,8 +115,8 @@ Notice that the image is not pulled down again. It already exists locally, so it
 
 Output:
 
-```console 
-> docker run hello-world
+```bash
+# docker run hello-world
 
 Hello from Docker!
 This message shows that your installation appears to be working correctly.
@@ -146,8 +151,8 @@ List all the images:
 
 Output:
 
-```console 
-docker images
+```bash
+# docker images
 REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
 hello-world         latest              fce289e99eb9        3 weeks ago         1.84kB
 ```
@@ -173,8 +178,8 @@ The running image is called a **container**. Let us run a more typical image; Th
 
 Output:
 
-```console 
-docker run -d couchdb
+```bash
+# docker run -d couchdb
 Unable to find image 'couchdb:latest' locally
 latest: Pulling from library/couchdb
 5e6ec7f28fb7: Downloading [===========================>                       ]  12.17MB/22.5MB
@@ -193,7 +198,7 @@ dbb7188da17c: Download complete
 
  The output above was captured while the image was still downloading from docker-hub. When the download is complete,  you don't see anything from the container, like with hello-world. Instead you see a long hex id like `272d409a806c485cfe83727f895093ee2fcd586a6cf98455e6216c9fc95af24d`. **This is the long id of the container**.
 
-```console 
+```bash
 Digest: sha256:7f3e6372ff8a87f1a11c63a787ec7dceda85a8fe80005d6c5bbdfa6a6bcde73e
 Status: Downloaded newer image for couchdb:latest
 272d409a806c485cfe83727f895093ee2fcd586a6cf98455e6216c9fc95af24d
@@ -203,16 +208,16 @@ Also notice that the -d in the run command with launch the container as **detach
 
 
 
-### 7. Here's how you would see the running container. 
+### 7. Look at the running container
 
 Notice only the first part of that long hex id is displayed. Typically this is more than enough to uniquely identify that container. `docker ps` provides information about when the container was created, how long it has been running, then name of the image as well as the name of the container. Note that each container must have a unique name. You can specify a name for each container as long as it is unique.
 
-`docker ps | grep couchdb` or `docker ps`
+`docker ps | grep couchdb` 
 
 Output:
 
-```console 
-docker ps               
+```bash
+# docker ps               
 CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                          NAMES
 272d409a806c        couchdb             "tini -- /docker-ent…"   3 minutes ago       Up 3 minutes        4369/tcp, 5984/tcp, 9100/tcp   xenodochial_heisenberg
 ```
@@ -229,8 +234,8 @@ Launch another container for the couchdb image.
 `docker run -d couchdb`
 Output:
 
-```console 
-> docker run -d couchdb
+```bash
+# docker run -d couchdb
 fd511f9cd8965395bfcb652d6a10b5eec5c0b4479950064d7e238420c8099a6b
 ```
 
@@ -240,12 +245,12 @@ Did you notice how quickly the second instance started? There was no need to dow
 
 ### 9. Two couchDB containers  
 
-`docker ps | grep couchdb` or just `docker ps`
+`docker ps | grep couchdb`
 
 Outpout:
 
-```console 
-> docker ps
+```bash
+# docker ps
 CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                          NAMES
 fd511f9cd896        couchdb             "tini -- /docker-ent…"   4 minutes ago       Up 4 minutes        4369/tcp, 5984/tcp, 9100/tcp   cocky_jones
 272d409a806c        couchdb             "tini -- /docker-ent…"   13 minutes ago      Up 13 minutes       4369/tcp, 5984/tcp, 9100/tcp   xenodochial_heisenberg
@@ -264,8 +269,8 @@ Stop the most recent container and then check to see what's running.
 
 Output:
 
-```console 
-> docker stop fd511f9cd896
+```bash
+# docker stop fd511f9cd896
 fd511f9cd896
 ```
 
@@ -275,8 +280,8 @@ Then check the container list:
 
 Output:
 
-```console
-docker ps
+```bash
+# docker ps
 CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                          NAMES
 272d409a806c        couchdb             "tini -- /docker-ent…"   19 minutes ago      Up 19 minutes       4369/tcp, 5984/tcp, 9100/tcp   xenodochial_heisenberg
 ```
@@ -296,8 +301,8 @@ Stop the other container and see what is running.
 
 Output:
 
-```console 
-docker ps
+```bash
+# docker ps
 CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
 ```
 
@@ -313,8 +318,8 @@ We have no more couchDB running constainer.
 
 Output:
 
-```console
-> docker images
+```bash
+# docker images
 REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
 couchdb             latest              3bfb066ff4c5        19 hours ago        205MB
 hello-world         latest              fce289e99eb9        3 weeks ago         1.84kB
@@ -332,8 +337,8 @@ Go ahead and delete the couchDB image and double check that it is gone.
 
 Output:
 
-```console
-> docker rmi couchdb
+```bash
+# docker rmi couchdb
 Error response from daemon: conflict: unable to remove repository reference "couchdb" (must force) - container 272d409a806c is using its referenced image 3bfb066ff4c5
 
 ```
@@ -353,8 +358,8 @@ You will noticed that all containers that you are listing have been stopped.
 
 Output:
 
-```console
-> docker ps -a | grep couchdb
+```bash
+# docker ps -a | grep couchdb
 fd511f9cd896        couchdb             "tini -- /docker-ent…"   21 minutes ago      Exited (0) 11 minutes ago                       cocky_jones
 272d409a806c        couchdb             "tini -- /docker-ent…"   29 minutes ago      Exited (0) 7 minutes ago                        xenodochial_heisenberg
 
@@ -369,8 +374,8 @@ Delete the stopped couchdb containers, delete the couchdb image, and make sure i
 `docker rm fd511f9cd896 272d409a806c `
 Output:
 
-```console 
-> docker rm fd511f9cd896 272d409a806c
+```bash
+# docker rm fd511f9cd896 272d409a806c
 fd511f9cd896
 272d409a806c
 ```
@@ -381,8 +386,8 @@ And use the rmi subcommand to remove the image:
 
 Output:
 
-```console 
-docker rmi couchdb
+```bash
+# docker rmi couchdb
 Untagged: couchdb:latest
 Untagged: couchdb@sha256:7f3e6372ff8a87f1a11c63a787ec7dceda85a8fe80005d6c5bbdfa6a6bcde73e
 Deleted: sha256:3bfb066ff4c595317efd3dc672a98b3defce21427947ecb9288ffec6c7040c2b
@@ -405,12 +410,6 @@ Notice that all the layers in the image have been gone.
 `docker ps -a | grep couchdb`
 
 ***Note:*** Docker images and containers can be referenced by **name** or by **id**. 
-
-An alternative to these commands is to use a combined command like the following one :
-
- `docker rm -v $(docker ps -a -q)`
-
-However be carefull with that command that will **remove all containers** and shoudn't be used within Kubernetes.
 
 
 
@@ -457,8 +456,8 @@ Execute the following in the /images folder as shown below (don't forget the **d
 `docker build -t myimage:latest .`
 
 Result: 
-``` console
-> docker build -t myimage:latest .
+``` bash
+# docker build -t myimage:latest .
 Sending build context to Docker daemon  2.048kB
 Step 1/2 : FROM busybox:latest
 latest: Pulling from library/busybox
@@ -484,8 +483,8 @@ If you run a docker images command now, you will see the myimage image listed in
 
 `docker images`
 
-```console
-> docker images
+```bash
+# docker images
 REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
 myimage             latest              e50f1efaafdc        4 minutes ago       1.2MB
 hello-world         latest              fce289e99eb9        3 weeks ago         1.84kB
@@ -498,8 +497,8 @@ You can now launch a container, any time via the standard docker run command:
 
 `docker run -it myimage`
 
-```console
-> docker run -it myimage
+```bash
+# docker run -it myimage
 / # ls
 bin   dev   etc   home  proc  root  sys   tmp   usr   var
 / # ps
@@ -525,8 +524,8 @@ Then build and run the myimage container:
 
 `docker run -it myimage`
 
-```console
-> docker run -it myimage
+```bash
+# docker run -it myimage
 Mon Apr 16 12:44:10 UTC 2018
 ```
 
@@ -554,8 +553,8 @@ Save, **Build** and re-rerun myimage.
 
 `docker run -it myimage`
 
-```console
-root:[images]: docker run -it myimage
+```bash
+# docker run -it myimage
 root:x:0:0:root:/root:/bin/sh
 daemon:x:1:1:daemon:/usr/sbin:/bin/false
 bin:x:2:2:bin:/bin:/bin/false
@@ -602,11 +601,15 @@ Now copy and paste the Dockerfile text (see above). Save the file.
 
 `docker run -d -p 8081:80 --name webserver myimage`
 
+To use your application, you have 3 possibilities:
+
+You can use **curl**:
+
 `curl http://localhost:8081`
 
 Results :
 
-```console
+```bash
 # curl http://localhost:8081
 <!DOCTYPE html>
 <html>
@@ -633,13 +636,21 @@ Commercial support is available at
 </html>
 ```
 
-Or you can also open a browser on your laptop and type :
+**Or** you can also open a browser on **your laptop** and type :
 
 http://localhost:8081/ 
+
+**Or** if you are running on the **provided VM**:
+
+`echo $IPADDRESS`
+
+http://<ipaddress>:8081/
 
 
 
 ![Launching the web server](./images/nginx2.png)
+
+
 
 ###3. Troubleshooting containers  
 
@@ -655,8 +666,8 @@ To troubleshoot your container or your application, you may want to go inside th
 
 Output:
 
-```console
-> docker exec -it webserver "/bin/bash"
+```bash
+# docker exec -it webserver "/bin/bash"
 root@cc88b7536a57:/# 
 root@cc88b7536a57:/# 
 root@cc88b7536a57:/# ll

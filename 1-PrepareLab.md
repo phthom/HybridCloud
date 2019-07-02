@@ -10,7 +10,7 @@
 
 Before you can run all the labs about container orchestration, you should prepare your environment to execute those labs. Check the following instructions.
 
-Labs are running on the **IBM Cloud** (ex Bluemix).
+Labs are running on the **IBM Cloud** (ex Bluemix) and **IBM Cloud Private**.
 
 
 
@@ -128,7 +128,15 @@ Go back to the **Catalog** and check that now you have access to **Kubernetes Se
 
 # Task 3. Install Docker Desktop on your Mac
 
-**<u>Skip This task if you already have Docker installed on your Mac</u>**
+
+
+> **IMPORTANT** : There are 2 possibilities to run the labs : on you laptop or on the provided VM.
+>
+> **<u>Skip this task if you choosed to run labs on the provided VM.</u>**
+>
+> **<u>Skip This task if you already have Docker installed on your Mac</u>**
+
+
 
 Follow this procedure to install the latest Docker Desktop (ex Community Edition) on your Mac (**for Windows**, jump to the next session) 
 
@@ -153,8 +161,8 @@ Open a terminal and type :
 `docker version`
 
 You should see something similar to this screen :
-```console
-> docker version
+```bash
+# docker version
 Client: Docker Engine - Community
  Version:           18.09.1
  API version:       1.39
@@ -183,7 +191,15 @@ Server: Docker Engine - Community
 
 # Task 4. Install Docker Desktop on Windows
 
-**<u>Skip This task if you already have Docker installed on you Windows 10</u>**
+
+
+> **IMPORTANT** : There are 2 possibilities to run the labs : on your laptop or on the provided VM.
+>
+> **<u>Skip this task if you choosed to run labs on the provided VM.</u>**
+>
+> **<u>Skip This task if you already have Docker installed on your Windows server </u>**
+
+
 
 Follow this procedure to install the latest Docker Desktop (ex Community Edition) on Windows (for Mac, jump to the previous session) 
 
@@ -219,8 +235,8 @@ Run docker version to check the version.
 `docker version`
 
 You should see something similar to this screen :
-```console
-> docker version
+```bash
+# docker version
 Client: Docker Engine - Community
  Version:           18.09.1
  API version:       1.39
@@ -248,7 +264,15 @@ Server: Docker Engine - Community
 
 # Task 5. Install Git on your laptop
 
-**<u>Skip This task if you already have GIT on your laptop</u>**
+
+
+> **IMPORTANT** : There are 2 possibilities to run the labs : on you laptop or on the provided VM.
+>
+> **<u>Skip this task if you choosed to run labs on the provided VM.</u>**
+>
+> **<u>Skip This task if you already have Docker installed on your laptop</u>**
+
+
 
 To install Git : 
 
@@ -267,13 +291,11 @@ At some point during the installation, change to the **"Use Windows default cons
 
 # Task 6. Install the ibmcloud command
 
-**<u>Skip This task if you already have ibmcloud and plugin installed on your laptop</u>**
+>  **IMPORTANT** :  <u>You must install the ibmcloud command on your laptop or on the provided VM depending of what you choose.</u>
+
+
 
 The **ibmcloud** command line interface (CLI) provides a set of commands that are grouped by namespace for users to interact with IBM Cloud. In previous versions, the name of that command was "bluemix" or "bx".
-
-You install a set of IBM Cloud commands and tools, verify the installation, and configure your environment. IBM® Cloud developer tools offer a command-line approach to creating, developing, and deploying end-to-end web, mobile, and microservice applications.
-
-
 
 Find more information here for more installation approaches :
 
@@ -284,6 +306,12 @@ Find more information here for more installation approaches :
 **For MacOS :**
 
 https://clis.cloud.ibm.com/download/bluemix-cli/latest/osx
+
+
+
+**For Linux :**
+
+`curl -fsSL https://clis.cloud.ibm.com/install/linux | sh`
 
 
 
@@ -341,7 +369,7 @@ Check your commands:
 
 ![image-20190411121443786](images/image-20190411121443786-4977683.png)
 
-` ibmcloud cs` or `ibmcloud ks` : these are the same commands
+ `ibmcloud ks` 
 
 ![image-20190411121605400](images/image-20190411121605400-4977765.png)
 
@@ -351,30 +379,33 @@ Check your commands:
 
 Login to IBM Cloud with the ibmcloud command :
 
- `ibmcloud login`
+ `ibmcloud login -a cloud.ibm.com -r eu-gb`
 
  And answer a few questions: email, password :
 
-```console
-ibmcloud login
-API endpoint: https://api.ng.bluemix.net
+```bash
+# ibmcloud login -a cloud.ibm.com -r eu-gb
+API endpoint: https://cloud.ibm.com
+Region: us-south
 
-Email> vatazi@easymail.top
+Email> thomas1@fr.ibm.com
 
 Password> 
 Authenticating...
 OK
 
-Targeted account va tazi's Account (6af9653fe1d644ee998627937a26547e)
+Targeted account Philippe THOMAS's Account (8181f93cf3b74ab762ed34a6523)
 
-Targeted resource group Default
+Targeted resource group default
+
+Targeted region eu-gb
 
                       
-API endpoint:      https://api.ng.bluemix.net   
-Region:            us-south   
-User:              vatazi@easymail.top   
-Account:           va tazi's Account (6af9653fe1d644ee998627937a26547e)   
-Resource group:    Default   
+API endpoint:      https://cloud.ibm.com   
+Region:            eu-gb   
+User:              thomas1@fr.ibm.com   
+Account:           Philippe THOMAS's Account (8181f93cf3b742b762ed34a6523)   
+Resource group:    default   
 CF API endpoint:      
 Org:                  
 Space:                

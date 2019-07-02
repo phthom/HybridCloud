@@ -4,10 +4,11 @@
 
 ---
 
-
 # Kubernetes and Helm Lab on ICP
 
-![image-20190604103852448](images/image-20190604103852448-9637532.png)
+![image-20190701110523228](images/image-20190701110523228-1971923.png)
+
+
 
 
 
@@ -51,34 +52,29 @@
   - Information stored in the K8 cluster state and networking info propagated to all worker nodes
 - **Secrets**:
   - Sensitive information that containers need to read or consume
+
   - Are special volumes mounted automatically so that the containers can read its contents
+
   - Each entry has it’s own path
 
-### Architecture
-
-See below a global picture showing ICP architecture and most common components.
-
-![Architecture](images/architecture.png)
-
-This lab is going to focus on "Docker / Kubernetes / Helm" which are the main foundation of IBM Cloud Private. 
 
 In this lab, all nodes will be part of a single VM.
 
-## TASK 1 : Check your ICP installation
+# TASK 1 : Check your ICP installation
 
 Using Terraform ( see [https://developer.ibm.com/recipes/tutorials/infrastructure-automation-with-terraform-on-ibm-cloud-iaas/](https://developer.ibm.com/recipes/tutorials/infrastructure-automation-with-terraform-on-ibm-cloud-iaas/) ), we instantiated for you a **virtual server** (16CPU - 32GB RAM - 400GB Disk - 1GB Network speed - Ubuntu 16.04.5 LTS) on IBM Cloud infrastructure (IaaS).
 
-We already have installed **ICP 3.1.2** on it. If you want to have more information on the ICP installation, have a look at : [https://github.com/phthom/icp31/blob/master/1-Installation.md](https://github.com/phthom/icp31/blob/master/1-Installation.md)
+We already have installed **ICP 3.2.0** on it. If you want to have more information on the ICP installation, have a look at : <https://github.com/phthom/icpdiscovery/blob/master/1-Installation.md>
 
 You will need **ssh** (or **putty**  ( https://www.putty.org/ )) to access this VM using the **IP address and the root password** the instructors gave you.
 
-From your web browser, go the following address where *ipaddress* is the IP your instructor gave you :
+From your web browser, go the following address where *ipaddress* is the IP from your instructor :
 
-`https://ipaddress:8443`  
+`https://<ipaddress>:8443`  
 
-**Userid** : admin
+**Userid** : admin   
 
-**Password** : admin1!
+**Password given by the instructor**
 
 ![Loginicp](images/loginicp.png)
 
@@ -86,187 +82,37 @@ You should receive the **Welcome Page**.
 
 Click on the **Catalog** menu (top right) to look at the list of applications already installed:
 
-![Menu](images/Hamburger.png)
+![image-20190701085732866](images/image-20190701085732866-1964253.png)
 
 The **Catalog** shows Charts that you can visit (it could take au few seconds to refresh the first time)
 
 You can look at the (helm) catalog and visit some entries (but don't create any application at the moment).
 
-### Kubernetes command line tool : KUBECTL
+On the top left side, click on the **hamburger menu** to look at the different options.
+
+![image-20190701085825015](images/image-20190701085825015-1964305.png)
+
+### Get connected to your cluster
 
 We now need to configure kubectl to get access to the cluster. An alternative method can be used (see Appendix A : How to get connected to the cluster) if you are interested.
 
-On the provided virtual server, we are using a **script** created for you to help to connect to the cluster
+On the provided virtual server, we are using the **cloudctl** command to help you to connect to the cluster
 
 Run : 
 
-`cat ~/connect2icp.sh`
-
-and look at the following code :
-
-```console
-CLUSTERNAME=mycluster
-ACCESS_IP=`curl ifconfig.co`
-USERNAME=admin
-PASSWD=admin1!
-
-token=$(curl -s -k -H "Content-Type: application/x-www-form-urlencoded;charset=UTF-8" -d "grant_type=password&username=$USERNAME&password=$PASSWD&scope=openid" https://$ACCESS_IP:8443/idprovider/v1/auth/identitytoken --insecure | jq .id_token | awk  -F '"' '{print $2}')
-
-kubectl config set-cluster $CLUSTERNAME.icp --server=https://$ACCESS_IP:8001 --insecure-skip-tls-verify=true
-kubectl config set-context $CLUSTERNAME.icp-context --cluster=$CLUSTERNAME.icp
-kubectl config set-credentials admin --token=$token
-kubectl config set-context $CLUSTERNAME.icp-context --user=admin --namespace=default
-kubectl config use-context $CLUSTERNAME.icp-context
 ```
-
-> These lines in that script are getting a token automatically for you. But every 12 hours, the token expires and you will need to type that script (connect2icp.sh) again. 
-
-Then execute that shell program :
-
-`~/connect2icp.sh`
-
-Results :
-
-```console
-# ~/connect2icp.sh
-Cluster "cluster.local" set.
-Context "cluster.local-context" modified.
-User "admin" set.
-Context "cluster.local-context" modified.
-Switched to context "cluster.local-context".
+cloudctl login -a https://mycluster.icp:8443 --skip-ssl-validation -u admin -p <passw> -n default
 ```
-
-As a result, you will see that you are now **connected** for **12 hours** to the cluster (with only one node):
-
-`kubectl version --short`
-
-Results :
-
-```console
-# kubectl version --short
-Client Version: v1.12.3
-Server Version: v1.12.3+icp
-```
-
-Try this command to show all the worker nodes :
-
-`kubectl get nodes`
-
-Results :
-
-```console
-# kubectl get nodes
-NAME            STATUS    ROLES     AGE       VERSION
-169.50.200.70   Ready     etcd,management,master,proxy,worker   35m       v1.12.3+icp
-```
-
-> After a long period of inactivity, if you see some connection error when typing a kubectl command then re-execute the `~/connect2icp.sh` command.
-
-To get help from the kubectl, just type this command:
-
-`kubectl`
-
-### ICP Command line tool : cloudctl
-
-This command can be used to configure and manage IBM Cloud Private. We have also installed the **cloudctl** command on the virtual server you will use.
-
-If you need to install cloudctl, type the following curl command : (don't forget to change the ipaddress):
-
-`curl -kLo cloudctl-linux-amd64-3.1.2-1203 https://ipaddress:8443/api/cli/cloudctl-linux-amd64`
 
 Results:
 
-```console 
-curl -kLo cloudctl-linux-amd64-3.1.0-715 https://169.50.200.70:8443/api/cli/cloudctl-linux-amd64
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100 13.9M  100 13.9M    0     0  38.4M      0 --:--:-- --:--:-- --:--:-- 38.4M
-
-```
-
-Now execute the following commands to change cloudctl to executable and to move that CLI to the right directory :
-
-```
-chmod 755 /root/cloudctl-linux-amd64-3.1.2-1203
-mv /root/cloudctl-linux-amd64-3.1.2-1203 /usr/local/bin/cloudctl
-```
-
-Execute the **cloudctl** command for the first time 
-
-`cloudctl`
-
-Results:
-
-```console 
-# cloudctl
-NAME:
-   cloudctl - A command line tool to interact with IBM Cloud Private
-
-USAGE:
-[environment variables] cloudctl [global options] command [arguments...] [command options]
-
-VERSION:
-   3.1.0-715+e4d4ee1d28cc2a588dabc0f54067841ad6c36ec9
-
-COMMANDS:
-   api       View the API endpoint and API version for the service.
-   catalog   Manage catalog
-   cm        Manage cluster
-   config    Write default values to the config
-   iam       Manage identities and access to resources
-   login     Log user in.
-   logout    Log user out.
-   plugin    Manage plugins
-   pm        Manage passwords
-   target    Set or view the targeted namespace
-   tokens    Display the oauth tokens for the current session. Run cloudctl login to retrieve the tokens.
-   version   Check cli and api version compatibility
-   help      
-   
-Enter 'cloudctl help [command]' for more information about a command.
-
-ENVIRONMENT VARIABLES:
-   CLOUDCTL_COLOR=false                     Do not colorize output
-   CLOUDCTL_HOME=path/to/dir                Path to config directory
-   CLOUDCTL_TRACE=true                      Print API request diagnostics to stdout
-   CLOUDCTL_TRACE=path/to/trace.log         Append API request diagnostics to a log file
-
-GLOBAL OPTIONS:
-   --help, -h                         Show help
-
-```
-
-
-
-Before using the **cloudctl** with the master, you must login to the master:
-
-`cloudctl login -a https://mycluster.icp:8443 --skip-ssl-validation`
-
-> For the login : admin/admin1!
-
-```console
-# cloudctl login -a https://mycluster.icp:8443 --skip-ssl-validation
-
-Username> admin
-
-Password> 
+```bash
+# cloudctl login -a https://mycluster.icp:8443 --skip-ssl-validation -u admin -p pass1! -n default
 Authenticating...
 OK
 
-Select an account:
-1. mycluster Account (id-mycluster-account)
-Enter a number> 1
 Targeted account mycluster Account (id-mycluster-account)
 
-Select a namespace:
-1. cert-manager
-2. default
-3. istio-system
-4. kube-public
-5. kube-system
-6. platform
-7. services
-Enter a number> 2
 Targeted namespace default
 
 Configuring kubectl ...
@@ -281,31 +127,118 @@ OK
 
 Configuring helm: /root/.helm
 OK
+```
+
+> That command is getting a token automatically for you. But every 12 hours, the token expires and you will need to type that command again. 
+
+Now execute the kubectl command:
+
+`kubectl version --short`
+
+Results :
+
+```bash
+# kubectl version --short
+Client Version: v1.13.5+icp
+Server Version: v1.13.5+icp
+```
+
+Try this command to show all the worker nodes :
+
+`kubectl get nodes`
+
+Results :
+
+```bash
+# kubectl get nodes
+NAME              STATUS   ROLES                                 AGE    VERSION
+158.176.128.215   Ready    etcd,management,master,proxy,worker   2d3h   v1.13.5+icp
+```
+
+> After a long period of inactivity, if you see some connection error when typing a kubectl command then re-execute the `Cloudctl login` command.
+
+To get help from the kubectl, just type this command:
+
+`kubectl`
+
+### More on cloudctl
+
+This command can be used to configure and manage IBM Cloud Private.
+
+Execute the **cloudctl** command for the first time :
+
+`cloudctl`
+
+Results:
+
+```bash
+# cloudctl
+NAME:
+   cloudctl - A command line tool to interact with IBM Cloud Private
+
+USAGE:
+[environment variables] cloudctl [global options] command [arguments...] [command options]
+
+VERSION:
+   v3.2.0-634+de52bd77a803c0a673b9bfb7368fc8bfc7483e48
+
+COMMANDS:
+   api          View the API endpoint and API version for the service.
+   catalog      Manage catalog
+   cm           Manage cluster
+   completion   Generate an auto-completion script for the specified shell (bash or zsh).
+   config       Write default values to the configuration.
+   helm-init    Prints the configuration of the HELM_HOST setting for Helm.
+   iam          Manage identities and access to resources
+   login        Log user in.
+   logout       Log user out.
+   mc           Multicluster Manager commands
+   metering     Download Metering reports
+   plugin       Manage plugins
+   pm           Manage passwords
+   target       Set or view the targeted namespace.
+   tokens       Display the OAuth tokens for the current session. Run `cloudctl login` to retrieve the tokens.
+   version      Check CLI and API version compatibility.
+   help         
 
 ```
 
-With that **cloudctl cm** CLI, you can manage the infrastructure part of the cluster like adding new worker nodes (machine-type-add, worker-add) and so on.
+With that **cloudctl catalog charts ** CLI for example, you can manage the helm catalog and the helm charts. Cloudctl can also be used to manage the security (iam, certs, passwords ...) or the multicloud controller.
 
-Then you can type some commands concerning your cluster:
+Then you can type some commands concerning your cluster or your catalog like:
 
-`cloudctl cm masters mycluster`
+`cloudctl catalog charts`
 
 Results
 
-```console
-# cloudctl cm masters mycluster
-ID             Private IP      Machine Type   State   
-mycluster-m1   169.50.200.70   -              deployed 
+```bash
+# cloudctl catalog charts
+Name                                 Version    Repository             Description   
+aqua-enforcer                        2.0.0      ibm-community-charts   A Helm chart for the Aqua Enforcer   
+aqua-scanner                         2.0.0      ibm-community-charts   A Helm chart for the aqua scanner cli component   
+aqua-server                          2.0.0      ibm-community-charts   A Helm chart for the Aqua Console Componants   
+artifactory-ha                       0.12.16    ibm-community-charts   Universal Repository Manager supporting all major packaging formats, build tools and CI servers.   
+audit-logging                        3.2.0      mgmt-charts            Audit logging storage and search management solution   
+auth-apikeys                         3.2.0      mgmt-charts            ICP IAM Token Service   
+auth-idp                             3.2.0      mgmt-charts            ICP Security Authentication Provider   
+auth-pap                             3.2.0      mgmt-charts            ICP IAM Policy Administration   
+auth-pdp                             3.2.0      mgmt-charts            ICP IAM Policy Decision   
+calico                               3.2.0      mgmt-charts            A Helm chart for Calico   
+...
 ```
 
-Among all sub-commands in **cloudctl**, there are some commands to manage the infrastructure components like :
+Among all sub-commands in **cloudctl**, there are some commands to manage the components like :
 
-- cluster
-- workers (adding, removing ...)
+- Catalog
 - registry (docker image management )
 - helm repositories
+- iam
+- metering
+- certs
 
-# Task 1 : Deploying Apps on ICP with Kubernetes
+
+
+# Task 2 : Deploying Apps on ICP
 
 ### 1. Check kubectl 
 
@@ -313,9 +246,13 @@ Test your connectivity to the cluster with this command:
 
  `kubectl get nodes`
 
-If you get an **error**, execute the following script that we created in the installation lab :
+If you get an **error**, execute the following command:
 
-`~/connect2icp.sh`
+```
+cloudctl login -a https://mycluster.icp:8443 --skip-ssl-validation -u admin -p <passw> -n default
+```
+
+
 
 
 ### 2. Download a GIT repo
@@ -328,7 +265,7 @@ Download the samples using Git :
 ​	
 Results:
 
-```
+```bash
 # git clone https://github.com/IBM/container-service-getting-s
 Cloning into 'container-service-getting-started-wt'...
 remote: Enumerating objects: 8, done.
@@ -340,7 +277,8 @@ Resolving deltas: 100% (445/445), done.
 ```
 
 
-### 4. Build a Docker image 
+
+### 3. Build a Docker image 
 
 Build the image locally and tag it with the name that you want to use on the IBM Cloud Private kubernetes cluster. The tag includes the namespace name of `default` in the cluster. The tag also targets the master node of the cluster, which manages the job of placing it on one or more worker nodes. This is because of the alias you created in the previous step, with the cluster name linked to the master node name. The communications with the master node happen on port 8500. Tagging the image this way tells Docker where to push the image in a later step. Use lowercase alphanumeric characters or underscores only in the image name. Don't forget the period (.) at the end of the command. The period tells Docker to look inside the current directory for the Dockerfile and build artifacts to build the image.
 
@@ -350,7 +288,7 @@ Build the image locally and tag it with the name that you want to use on the IBM
 
 Results:
 
-```
+```bash
 # docker build -t mycluster.icp:8500/default/hello-world .
 Sending build context to Docker daemon  15.36kB
 Step 1/6 : FROM node:9.4.0-alpine
@@ -415,9 +353,11 @@ To see the image, use the command:
 
 `docker images mycluster.icp:8500/default/hello-world:latest`
 
-### 5. Push the image to the registry
 
-Log in as user `admin` with password `admin1!`.
+
+### 4. Push the image to the registry
+
+Log in as user `admin` with password given by the instructor.
 
 `docker login mycluster.icp:8500`
 
@@ -425,7 +365,7 @@ Log in as user `admin` with password `admin1!`.
 
  Your output should look like this.
 
-```
+```bash
 # docker push mycluster.icp:8500/default/hello-world
 The push refers to repository [mycluster.icp:8500/default/hello-world]
 96b6023918bd: Pushed 
@@ -438,18 +378,20 @@ latest: digest: sha256:019a5da27d6ed2a58fab45669707daf89932da7c2bc13072c41ed4fb3
 ```
 
 
-### 6. View your image in the console
 
-Open a browser to https://ipaddress:8443. 
+### 5. View your image in the console
 
-Change the *ipaddress* depending on you hosts file. Create a security exception in your browser for this location and if necessary, click on the `Advanced` link and follow the prompts. Log in as user `admin` with password `admin1!`. 
+Open a browser to https://<ipaddress>:8443 
+
+Change the *ipaddress* depending on you hosts file. Create a security exception in your browser for this location and if necessary, click on the `Advanced` link and follow the prompts. Log in as user `admin` with password given by the instructor. 
 
 View your image using `Menu > Container Images`
 
 ![image list](images/imagelist.png)
 
 
-### 7. Run your first deployment
+
+### 6. Run your first deployment
 
 Use your image to create a kubernetes deployment with the following command.
 
@@ -457,31 +399,36 @@ Use your image to create a kubernetes deployment with the following command.
 
 Results:
 
-```
+```bash
 # kubectl run hello-world-deployment --image=mycluster.icp:8500/default/hello-world
 kubectl run --generator=deployment/apps.v1beta1 is DEPRECATED and will be removed in a future version. Use kubectl create instead.
 deployment.apps/hello-world-deployment created
 ```
 
+> The run command is deprecated and should be replace by a **kubectl create** in the future.
 
 
 
-### 8. Expose your first service
+### 7. Expose your first service
 
 Create a service to access your running container using the following command.
 
-`kubectl expose deployment/hello-world-deployment --type=NodePort --port=8080 --name=hello-world-service --target-port=8080`
+```
+kubectl expose deployment/hello-world-deployment --type=NodePort --port=8080 --name=hello-world-service --target-port=8080
+```
+
+
 
 Your output should be:
 
-```
+```bash
 # kubectl expose deployment/hello-world-deployment --type=NodePort --port=8080 --name=hello-world-service --target-port=8080
 service/hello-world-service exposed
 ```
 
 
 
-### 9. Identify the NodePort
+### 8. Identify the NodePort
 
 With the NodePort type of service, the kubernetes cluster creates a 5-digit port number to access the running container on through the service. 
 
@@ -491,7 +438,7 @@ The service is accessed through the IP address of the proxy node on the NodePort
 
  Your output should look like this.
 
- ```
+ ```bash
 # kubectl describe service hello-world-service
 Name:                     hello-world-service
 Namespace:                default
@@ -513,14 +460,16 @@ Events:                   <none>
 From that output, write down the nodePort (i.e. 30330 in that case).
 
 
-### 10. Use the NodePort 
+
+### 9. Use the NodePort 
 
 Open a web browser window and go to the URL of your master node with your NodePort number, such as `http://ipaddress:30330`. Your output should look like this.
 
  ![image-20181130164615038](images/image-20181130164615038.png)
 
 
-### 11. Application troubleshooting 
+
+### 10. POD and Application troubleshooting 
 
 > You can view much of the information on your cluster resources visually through the **IBM Cloud Private console**, similar to information you might have viewed in the Kubernetes Dashboard. 
 
@@ -531,9 +480,11 @@ As an alternative, you can obtain text-based information on all the resources ru
 Results:
 
 
-    # kubectl get pods
-    NAME                                      READY     STATUS    RESTARTS   AGE
-    hello-world-deployment-67b694c76f-hvg9k   1/1       Running   0          11m
+```bash
+# kubectl get pods
+NAME                                      READY     STATUS    RESTARTS   AGE
+hello-world-deployment-67b694c76f-hvg9k   1/1       Running   0          11m
+```
 
 If the POD is running then look at the log (change the pod name with the one shown in latest command):
 
@@ -541,7 +492,7 @@ If the POD is running then look at the log (change the pod name with the one sho
 
 Results:
 
-```
+```bash
 # kubectl logs hello-world-deployment-67b694c76f-hvg9k
 Sample app is listening on port 8080.
 
@@ -555,7 +506,7 @@ You can also go inside your container:
 
 Results:
 
-```
+```bash
 # kubectl exec -it hello-world-deployment-67b694c76f-hvg9k /bin/sh
 / # ps
 PID   USER     TIME   COMMAND
@@ -606,6 +557,8 @@ In this lab, understand how to update the number of replicas a deployment has an
 
 For this lab, you need a running deployment with a single replica. First, we cleaned up the running deployment.
 
+
+
 ### 1. Clean up the current deployment
 
 To do so, use the 2 following commands :
@@ -617,11 +570,15 @@ To do so, use the 2 following commands :
 
 `kubectl delete service hello-world-service`
 
+
+
 ### 2. Run a clean deployment
 
 To do so, use the following commands :
 
 `kubectl run hello-world --image=mycluster.icp:8500/default/hello-world`
+
+
 
 ### 3. Scale the application
 
@@ -645,7 +602,7 @@ To see your changes being rolled out, you can run:
 
 The rollout might occur so quickly that the following messages might not display:
 
-```console
+```bash
 $ kubectl rollout status deployment/hello-world
 Waiting for rollout to finish: 1 of 10 updated replicas are available...
 Waiting for rollout to finish: 2 of 10 updated replicas are available...
@@ -665,7 +622,7 @@ You should see output listing 10 replicas of your deployment:
 
 Here is the result:
 
-```console
+```bash
 NAME                          READY     STATUS    RESTARTS   AGE
 hello-world-562211614-1tqm7   1/1       Running   0          1d
 hello-world-562211614-1zqn4   1/1       Running   0          2m
@@ -679,97 +636,10 @@ hello-world-562211614-zksw3   1/1       Running   0          2m
 hello-world-562211614-zsp0j   1/1       Running   0          2m
 ```
 
-### 4. Rollout an update to  the application
 
-Kubernetes allows you to use a rollout to update an app deployment with a new Docker image. This allows you to easily update the running image and also allows you to easily undo a rollout, if a problem is discovered after deployment.
-
-In the previous lab, we created an image with a 1 tag. Let's make a version of the image that includes new content and use a 2 tag. This lab also contains a Dockerfile. Let's build and push it up to our image registry.
-
-If you are in "Lab 1" directory, you need to go to "Lab 2" directory:
-
-`cd ../"Lab 2"`
-
-Build a new version (2) of that application: 
-
-`docker build --tag mycluster.icp:8500/default/hello-world:2 .`
-
-Then push the new version into the registry:
-
-`docker push mycluster.icp:8500/default/hello-world:2`
-
-Using kubectl, you can now update your deployment to use the latest image. kubectl allows you to change details about existing resources with the set subcommand. We can use it to change the image being used.
-
-`kubectl set image deployment/hello-world hello-world=mycluster.icp:8500/default/hello-world:2`
-
-Note that a pod could have multiple containers, in which case each container will have its own name. Multiple containers can be updated at the same time. 
-
-Run kubectl rollout status deployment/hello-world or kubectl get replicasets to check the status of the rollout. The rollout might occur so quickly that the following messages might not display:
-
-`kubectl rollout status deployment/hello-world`
-
-Results:
-
-```console
-# kubectl rollout status deployment/hello-world
-Waiting for rollout to finish: 2 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 3 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 3 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 3 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 4 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 4 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 4 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 4 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 4 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 5 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 5 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 5 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 6 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 6 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 6 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 7 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 7 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 7 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 7 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 8 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 8 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 8 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 8 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 9 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 9 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 9 out of 10 new replicas have been updated...
-Waiting for rollout to finish: 1 old replicas are pending termination...
-Waiting for rollout to finish: 1 old replicas are pending termination...
-Waiting for rollout to finish: 1 old replicas are pending termination...
-Waiting for rollout to finish: 9 of 10 updated replicas are available...
-Waiting for rollout to finish: 9 of 10 updated replicas are available...
-Waiting for rollout to finish: 9 of 10 updated replicas are available...
-deployment "hello-world" successfully rolled out
-```
-
-Finally, use that command to see the result:
-
-`kubectl get replicasets`
-
-```
-=> kubectl get replicasets
-NAME                   DESIRED   CURRENT   READY     AGE
-hello-world-1663871401   0         0         0         1h
-hello-world-3254495675   10        10        10        1m
-```
-
-Create a new service:
-
-`kubectl expose deployment/hello-world --type=NodePort --port=8080 --name=hello-world-service --target-port=8080`
-
-Take a note of the NodePort in the description. The NodePord is working against the public IP address of the worker node (in this case this is our unique **ipaddress**)
-
-(Reminder : use `kubectl describe service` )
-
-Perform a curl `http://ipaddress:<nodeport>` to confirm your new code is active or open a browser and you see "Great Job for the second stage".
-
-![image-20181206113207582](images/image-20181206113207582.png)
 
 # Task 4: Understand Kubernetes manifests
+
 
 
 ### 1. Build a new Docker image
@@ -785,7 +655,7 @@ Then build the container:
 
 Results:
 
-```
+```bash
 # docker build -t mycluster.icp:8500/default/hello-world:2 .
 Sending build context to Docker daemon  19.97kB
 Step 1/6 : FROM node:9.4.0-alpine
@@ -847,7 +717,7 @@ And finally push the image to the ICP registry:
 
 Result:
 
-```
+```bash
 # docker push 
 The push refers to repository [mycluster.icp:8500/default/hello-world]
 0a7c2f714c9d: Pushed 
@@ -864,13 +734,15 @@ The push refers to repository [mycluster.icp:8500/default/hello-world]
 
 ### 2. View the image in the registry
 
-Type https://ipaddress:8443
+Go to https://<ipaddress>:8443 in your browser
 
-	- Select **Menu > Container Images**
-	- Click on the `default/hello-world`
-	- Check version 2 and Latest are in the Tags
+- Select **Menu > Container Images**
+- Click on the `default/hello-world`
+- Check version 2 and Latest are in the Tags
 
 ![New version](./images/version.png)
+
+
 
 ### 3. Analyse a Kubernetes manifest
 
@@ -915,7 +787,7 @@ spec:
 - The Pod is defined as a template that contains the similar structure of metadata and specification
 - The specification of the pod includes an array of containers that refers to an image.
   - **Change** **image** to : `mycluster.icp:8500/default/hello-world:2`
-- The livenessProbe and readinessProbe are checks that the kubernetes system would perform to check pod's health. In this example, we have defined a HTTP liveness probe to check health of the container every five seconds. **For the first 10-15 seconds the `/healthz` returns a `200` response and will fail afterward**. Kubernetes will automatically restart the service.
+- The livenessProbe and readinessProbe are checks that the kubernetes system would perform to check pod's health. In this example, we have defined a HTTP liveness probe to check health of the container every five seconds. **For the first minute the `/healthz` returns a `200` response and will fail afterward**. Kubernetes will automatically restart the service.
 
 Review the **service's manifest**
 
@@ -940,14 +812,18 @@ spec:
 - The service defines the accessibility of a pod. This service is of type NodePort, which exposes an internal Port (8080) into an externally accessible nodePort through the proxy node (here port 30072)
 - How does a service know which pod are associated with it?  From the selector(s) that would select all pods with the same label(s) to be load balanced.
 
+
+
 ### 4. Deploying resources to ICP
 
 - Create Kubernetes resources using the yaml configuration file and the following command (using **kubectl apply** is used to create and/or update resources) :
 
   `kubectl apply -f healthcheck.yml`
 
+  Results
+
   ```bash
-  root@iccws101:~/container-service-getting-started-wt/Lab 2# kubectl apply -f healthcheck.yml
+  # kubectl apply -f healthcheck.yml
   deployment.apps/hw-demo-deployment created
   service/hw-demo-service created
   ```
@@ -960,112 +836,54 @@ spec:
 
 ![1553682535675](images/1553682535675.png)
 
-After a will, you can see various number for Read and Available columns due to the health check that is failing (on purpose by the application), and growing again to 3 after a while.
+**After a moment, you can see various number for Ready and Available columns due to the health check that is failing (on purpose by the application), and growing again to 3 after a while.**
 
 Before proceeding to the next step, delete these resources with one single line : 
 
 `kubectl delete -f healthcheck.yml`
 
 ```bash
-root@iccws101:~/container-service-getting-started-wt/Lab 2# kubectl delete -f healthcheck.yml
+# kubectl delete -f healthcheck.yml
 deployment.apps "hw-demo-deployment" deleted
 service "hw-demo-service" deleted
 ```
+
+
 
 # Task 5 : Define a Helm chart
 
 Now that you have understood the structure of a kubernetes manifest file, you can start working with helm chart. Basically a helm chart is a collection of manifest files that are deployed as a group. The deployment includes the ability to perform variable substitution based on a configuration file.
 
+
+
 ### 1. Check Helm
 
-First retreive kubernetes configuration for ICP : 
+Check helm version : 
 
-`~/connect2icp.sh`
-
-Then check helm version : 
-
-`helm version —tls`
+`helm version —tls --short`
 
 Results:
 
-```console 
-# helm version --tls
-Client: &version.Version{SemVer:"v2.9.1", GitCommit:"20adb27c7c5868466912eebdf6664e7390ebe710", GitTreeState:"clean"}
-Server: &version.Version{SemVer:"v2.9.1+icp", GitCommit:"843201eceab24e7102ebb87cb00d82bc973d84a7", GitTreeState:"clean"}
-
+```bash
+# helm version --tls --short
+Client: v2.12.3+geecf22f
+Server: v2.12.3+icp+g34e12ad
 ```
 
-> If you don't see the client and servers numbers or an error, then proceed to the helm installation.
+> If you don't see the client and server version numbers or errors :
+>
+> - first be sure you are logged in (using the **cloudctl login** command).
+>
+> - or proceed to the helm installation (see Appendix A of this document)
 
-### Installing helm (optional if Server )
+Another important step is to access to the **ICP container registry**:
 
-Helm is a client/server application : Helm client and Tiller server.
-Before we can run any chart with helm, we should proceed to some installation and configuration.
-
-Download the Helm client:
-
-```console
-cd
-curl -O https://storage.googleapis.com/kubernetes-helm/helm-v2.9.1-linux-amd64.tar.gz
-tar -vxhf helm-v2.9.1-linux-amd64.tar.gz
-export PATH=/root/linux-amd64:$PATH
-```
-
-Then set an environment variable:
-
-```console
-export HELM_HOME=/root/.helm
-```
-
-You should Initialize Helm
-
-`helm init --client-only`
+`docker login mycluster.icp:8500 -u admin -p <password>`
 
 Results:
 
-```console
-# helm init --client-only
-Creating /root/.helm/repository
-Creating /root/.helm/repository/cache
-Creating /root/.helm/repository/local
-Creating /root/.helm/plugins
-Creating /root/.helm/starters
-Creating /root/.helm/cache/archive
-Creating /root/.helm/repository/repositories.yaml
-Adding stable repo with URL: https://kubernetes-charts.storage.googleapis.com
-Adding local repo with URL: http://127.0.0.1:8879/charts
-$HELM_HOME has been configured at /root/.helm.
-Not installing Tiller due to 'client-only' flag having been set
-Happy Helming!
-
-```
-
-After you have initialize helm client. Try the following command to see the version:
-
-`helm version --tls`
-
-Results:
-
-```console 
-# helm version --tls
-Client: &version.Version{SemVer:"v2.9.1", GitCommit:"20adb27c7c5868466912eebdf6664e7390ebe710", GitTreeState:"clean"}
-Server: &version.Version{SemVer:"v2.9.1+icp", GitCommit:"843201eceab24e7102ebb87cb00d82bc973d84a7", GitTreeState:"clean"}
-
-```
-
-> The helm Client and server should be the same version (i.e. **version 2.9.1**)
-> If you get some X509 error the also type that command: `cp ~/.kube/mycluster/*.pem ~/.helm/`
-
-Another important step is to access to the ICP container registry.
-
-To do so,  login to the private registry:
-
-`docker login mycluster.icp:8500 -u admin -p admin1!`
-
-Results:
-
-```console
-# docker login mycluster.icp:8500 -u admin -p admin1!
+```bash
+# docker login mycluster.icp:8500 -u admin -p pass1!
 WARNING! Using --password via the CLI is insecure. Use --password-stdin.
 Login Succeeded
 ```
@@ -1084,8 +902,26 @@ Login Succeeded
 
 `tree .`
 
+Results:
 
-![create tree](./images/treehelm.png)
+```bash
+# tree .
+.
+├── charts
+├── Chart.yaml
+├── templates
+│   ├── deployment.yaml
+│   ├── _helpers.tpl
+│   ├── ingress.yaml
+│   ├── NOTES.txt
+│   ├── service.yaml
+│   └── tests
+│       └── test-connection.yaml
+└── values.yaml
+
+3 directories, 8 files
+
+```
 
 
 
@@ -1095,12 +931,10 @@ Edit the value.yaml file:
 
 Look at **values.yaml** and **modify it**. 
 
-`nano values.yaml`
-
 Replace the **service section** and choose a port (like 30073 for instance) with the following code:
 
-```console
- service:
+```bash
+service:
   name: hellonginx-service
   type: NodePort
   externalPort: 80
@@ -1108,165 +942,58 @@ Replace the **service section** and choose a port (like 30073 for instance) with
   nodePort: 30073
 ```
 
-The main content for **values.yaml** is as follows:
-
-```
-# Default values for hellonginx.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-replicaCount: 1
-
-image:
-  repository: nginx
-  tag: stable
-  pullPolicy: IfNotPresent
-
-service:
-  name: hellonginx-service
-  type: NodePort
-  externalPort: 80  
-  internalPort: 80  
-  nodePort: 30073
-
-ingress:
-  enabled: false
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  path: /
-  hosts:
-    - chart-example.local
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #  cpu: 100m
-  #  memory: 128Mi
-  # requests:
-  #  cpu: 100m
-  #  memory: 128Mi
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
-```
-
-
-
 Review deployment template:
 
 `nano /root/hellonginx/templates/deployment.yaml`
 
 **Don't change anything.**
 
-```
-apiVersion: apps/v1beta2
-kind: Deployment
-metadata:
-  name: {{ template "hellonginx.fullname" . }}
-  labels:
-    app: {{ template "hellonginx.name" . }}
-    chart: {{ template "hellonginx.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-spec:
-  replicas: {{ .Values.replicaCount }}
-  selector:
-    matchLabels:
-      app: {{ template "hellonginx.name" . }}
-      release: {{ .Release.Name }}
-  template:
-    metadata:
-      labels:
-        app: {{ template "hellonginx.name" . }}
-        release: {{ .Release.Name }}
-    spec:
-      containers:
-        - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - name: http
-              containerPort: 80
-              protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
-          resources:
-{{ toYaml .Values.resources | indent 12 }}
-    {{- with .Values.nodeSelector }}
-      nodeSelector:
-{{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.affinity }}
-      affinity:
-{{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.tolerations }}
-      tolerations:
-{{ toYaml . | indent 8 }}
-    {{- end }}
-```
-
 Then review the **service template**:
 `nano /root/hellonginx/templates/service.yaml`
 
-Change the **-port section** with the following code (don't introduce any TAB in the file):
+Change the **ports section** with the following code (don't introduce any TAB in the file):
 
-        - port: {{ .Values.service.externalPort }}
-          targetPort: {{ .Values.service.internalPort }}
-          protocol: TCP
-          nodePort: {{ .Values.service.nodePort }}
-          name: {{ .Values.service.name }}
-So the service should look as follows:
-
-```
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ template "hellonginx.fullname" . }}
-  labels:
-    app: {{ template "hellonginx.name" . }}
-    chart: {{ template "hellonginx.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-spec:
-  type: {{ .Values.service.type }}
+```bash
   ports:
     - port: {{ .Values.service.externalPort }}
       targetPort: {{ .Values.service.internalPort }}
       protocol: TCP
       nodePort: {{ .Values.service.nodePort }}
       name: {{ .Values.service.name }}
-  selector:
-    app: {{ template "hellonginx.name" . }}
-    release: {{ .Release.Name }}
 ```
+
 
 ### 3. Check the chart
 
-Go back to the hellonginx path and check the validity of the helm chart.
+In the hellonginx directory, open the chart.yaml file:
 
 `cd /root/hellonginx`
 
+`nano Chart.yaml`
+
+Add this line at the of the file:
+
+`icon: https://www.nginx.com/wp-content/uploads/2019/01/logo.svg`
+
+The purpose of this line is to add an icon to the tile in the catalog. You can specify any sag or png file.
+
+Save the Chart.yaml file
+
+Check the validity of the helm chart.
+
 `helm lint`
 
-![modify chart](images/lint.png)
+Results:
+
+```bash
+# helm lint
+==> Linting .
+Lint OK
+
+1 chart(s) linted, no failures
+```
+
+
 
 In case of error, you can :
 
@@ -1280,12 +1007,14 @@ In case of error, you can :
 
 The helm chart that we created in the previous section that has been verified now can be deployed.
 
+
+
 ### 1. Create a new namespace
 
 You can use the command line to create a new namespace or you can use the IBM Cloud Private Console to do so:
 - Open a  Web browser from the application launcher
 - Go to `https://<<ipaddress>>:8443/`
-- Login as `admin` with the password of `admin1!`
+- Login as `admin` with the password
 - Go to **Menu > Manage**
 
 - Select __Namespaces__ then click __Create namespace__
@@ -1310,7 +1039,7 @@ Type the following command and don't forget the dot at the end:
 `helm install --name hellonginx --namespace training --tls .`
 
 Results:
-```console
+```bash
 # helm install --name hellonginx --namespace training --tls .
 NAME:   hellonginx
 LAST DEPLOYED: Thu Apr 19 23:49:47 2018
@@ -1344,7 +1073,7 @@ Check the pods are running in the training namespace:
 
 Results:
 
-```
+```bash
 # kubectl get pods -n training
 NAME                          READY     STATUS    RESTARTS   AGE
 hellonginx-798f6d7885-vqdv4   1/1       Running   0          5m
@@ -1364,7 +1093,7 @@ Try this url and get the nginx hello:
 
 Results:
 
-```console
+```bash
 # helm list hellonginx --tls --namespace training
 NAME      	REVISION	UPDATED                 	STATUS  	CHART           	NAMESPACE
 hellonginx	1       	Mon Oct  8 20:54:37 2018	DEPLOYED	hellonginx-0.1.0	training 
@@ -1375,7 +1104,7 @@ hellonginx	1       	Mon Oct  8 20:54:37 2018	DEPLOYED	hellonginx-0.1.0	training
 
 `kubectl get deployments --namespace=training`
 
-```console
+```bash
 # kubectl get deployments --namespace=training
 NAME         DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
 hellonginx   1         1         1            1           9m
@@ -1385,7 +1114,7 @@ hellonginx   1         1         1            1           9m
 
 `kubectl get services --namespace=training`
 
-```console
+```bash
 # kubectl get services --namespace=training
 NAME         TYPE       CLUSTER-IP   EXTERNAL-IP   PORT(S)        AGE
 hellonginx   NodePort   10.0.0.131   <none>        80:30073/TCP   10m
@@ -1399,8 +1128,8 @@ Locate the line port 80:300073.
 
 **Results**
 
-```console
-root:[hellonginx]: kubectl get pods --namespace=training
+```bash
+# kubectl get pods --namespace=training
 NAME                          READY     STATUS    RESTARTS   AGE
 hellonginx-6bcd9f4578-zqt6r   1/1       Running   0          11m
 ```
@@ -1417,7 +1146,7 @@ Change the replicas to 3 and then upgrade hellonginx:
 
 **Results**
 
-```console
+```bash
 root:[hellonginx]: helm  upgrade hellonginx . --tls
 Release "hellonginx" has been upgraded. Happy Helming!
 LAST DEPLOYED: Fri Apr 20 00:06:55 2018
@@ -1443,9 +1172,32 @@ NOTES:
 
 ### 8. Define the chart in the ICP Catalog
 
-A good idea is to define the chart in the catalog.
+A good idea is to define the chart in a tile in the catalog. 
 
-First, package the helm chart as a tgz file:
+We now want to add some description to the tile in the catalog.
+
+To do so, create a README.md file:
+
+`nano README.md`
+
+copy the following lines in the file:
+
+```md
+# HELLONGINX
+
+This application is a demonstration for nginx
+
+NGINX is a free, open-source, high-performance HTTP server and reverse proxy, as well as an IMAP/POP3 proxy server. NGINX is known for its high performance, stability, rich fea
+ture set, simple configuration, and low resource consumption.
+
+NGINX is one of a handful of servers written to address the C10K problem. Unlike traditional servers, NGINX doesn’t rely on threads to handle requests. Instead it uses a much more scalable event-driven (asynchronous) architecture. This architecture uses small, but more importantly, predictable amounts of memory under load. Even if you don’t expect to handle thousands of simultaneous requests, you can still benefit from NGINX’s high-performance and small memory footprint. NGINX scales in all directions: from the smallest VPS all the way up to large clusters of servers.
+
+NGINX powers several high-visibility sites, such as Netflix, Hulu, Pinterest, CloudFlare, Airbnb, WordPress.com, GitHub, SoundCloud, Zynga, Eventbrite, Zappos, Media Temple, Heroku, RightScale, Engine Yard, StackPath, CDN77 and many others.
+```
+
+ 
+
+Then, package the helm chart as a tgz file:
 
 `cd`
 
@@ -1453,20 +1205,17 @@ First, package the helm chart as a tgz file:
 
 Results:
 
-```
+```bash
 # helm package hellonginx
 Successfully packaged chart and saved it to: /root/hellonginx-0.1.0.tgz
 ```
 
-**Login** to the master:
-`cloudctl login -a https://mycluster.icp:8443 --skip-ssl-validation`
-
-Then, use the **cloudctl catalog**command to load the chart:
+Then, use the **cloudctl catalog** command to load the chart:
 `cloudctl catalog load-helm-chart --archive /root/hellonginx-0.1.0.tgz`
 
 Results:
 
-``` 
+``` bash
 # cloudctl catalog load-helm-chart --archive /root/hellonginx-0.1.0.tgz
 Loading helm chart
 Loaded helm chart
@@ -1483,11 +1232,11 @@ Leave the terminal and login to the ICP console with admin/admin :
 
 - Find the `hellonginx` chart from Catalog
 
-![search hello](images/hellonginx2.png)
+![image-20190701084236420](images/image-20190701084236420-1963356.png)
 
 - Click on the `hellonginx` chart to get access to configuration.
 
-![hello chart](images/hellonginx3.png)
+![image-20190701084306521](images/image-20190701084306521-1963386.png)
 
 - Click **configure** to see the parameters:
 
@@ -1500,7 +1249,7 @@ Click **Install** to see the results.
 
 Then check the application is running clicking on **Launch** on the next page.
 
-Of course, you can customize the README.MD and add an icon to make the chart more appealing.
+Of course, you can customize the README.MD and add some different icon to make the chart more appealing.
 
 # Conclusion
 
@@ -1509,6 +1258,72 @@ Congratulations, you have successfully completed this Containers lab ! You've de
 ------
 
 ## End of Lab
+
+
+
+## Appendix A : Installing helm
+
+Helm is a client/server application : Helm client and Tiller server.
+Before we can run any chart with helm, we should proceed to some installation and configuration.
+
+Download the Helm client:
+
+```bash
+cd
+curl -O https://storage.googleapis.com/kubernetes-helm/helm-v2.12.3-linux-amd64.tar.gz
+tar -vxhf helm-v2.9.1-linux-amd64.tar.gz
+export PATH=/root/linux-amd64:$PATH
+```
+
+Then set an environment variable:
+
+```bash
+export HELM_HOME=/root/.helm
+```
+
+You should Initialize Helm
+
+`helm init --client-only`
+
+Results:
+
+```bash
+# helm init --client-only
+Creating /root/.helm/repository
+Creating /root/.helm/repository/cache
+Creating /root/.helm/repository/local
+Creating /root/.helm/plugins
+Creating /root/.helm/starters
+Creating /root/.helm/cache/archive
+Creating /root/.helm/repository/repositories.yaml
+Adding stable repo with URL: https://kubernetes-charts.storage.googleapis.com
+Adding local repo with URL: http://127.0.0.1:8879/charts
+$HELM_HOME has been configured at /root/.helm.
+Not installing Tiller due to 'client-only' flag having been set
+Happy Helming!
+
+```
+
+After you have initialize helm client. Try the following command to see the version:
+
+`helm version --tls --short` 
+
+Results:
+
+```bash
+# helm version --tls --short
+Client: v2.12.3+geecf22f
+Server: v2.12.3+icp+g34e12ad
+```
+
+> The helm Client and server should be the same version (i.e. **version 2.12.3**)
+> If you get some X509 error the also type that command: `cp ~/.kube/mycluster/*.pem ~/.helm/`
+
+
+
+## End of Appendix
+
+
 
 
 
