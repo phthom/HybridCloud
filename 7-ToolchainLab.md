@@ -49,7 +49,7 @@ Before you can run all the labs, you should prepare your environment to execute 
 
 Labs are running on the **IBM Cloud** (ex Bluemix). 
 
-> if you already have a **IBM Cloud account**, you can skip this section.
+> You should have an **IBM account**
 >
 > This account can be a lite account, a trial account or a Pay as You Go Account.
 
