@@ -407,7 +407,7 @@ Deleted: sha256:3c816b4ead84066ec2cadec2b943993aaacc3fe35fcd77ada3d09dc4f3937313
 
 Notice that all the layers in the image have been gone.  
 
-`docker ps -a | grep couchdb`
+`docker images -a | grep couchdb`
 
 ***Note:*** Docker images and containers can be referenced by **name** or by **id**. 
 
